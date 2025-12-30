@@ -33,7 +33,7 @@
 #
 # Note references to issue numbers are for the github repository of latexdiff: https://github.com/ftilmann/latexdiff
 #
-# Version 1.3.5a: [ bump to 1.4.0 at release!]
+# Version 1.4.0:
 #
 #  New features:
 #  - add directive pairs %BEGIN DIF(ADD|DEL), %END DIF(ADD|DEL) that causes blocks to be marked up as a whole
@@ -307,43 +307,42 @@ use File::Spec;
 my ($algodiffversion) = split( / /, $Algorithm::Diff::VERSION );
 
 my ($versionstring) = <<EOF ;
-This is LATEXDIFF 1.3.5a (Algorithm::Diff $Algorithm::Diff::VERSION, Perl $^V)
+This is LATEXDIFF 1.4.0 (Algorithm::Diff $Algorithm::Diff::VERSION, Perl $^V)
   (c) 2004-2024 F J Tilmann
 EOF
 
 # Hash with defaults for configuration variables. These marked undef have default values constructed from list defined in the DATA block
 # (under tag CONFIG)
 my %CONFIG = (
-  MINWORDSBLOCK => 3,    # minimum number of tokens to form an independent block
-                         # shorter identical blocks will be merged to the previous word
-  MAXCHANGESLETTER => 1, # maximum number of changes in a letter for letter-level markup 
-                         # (rather than standard word level) to be used 
-  SCALEDELGRAPHICS => 0.5, # factor with which deleted figures will be scaled down (i.e. 0.5 implies they are shown at half linear size)
-                           # this is only used for --dgraphics-markup=BOTH option
-  FLOATENV   => undef,            # Environments in which FL variants of defined commands are used
-  PICTUREENV => undef,            # Environments in which all change markup is removed
-  MATHENV    => undef,            # Environments turning on display math mode (code also knows about \[ and \])
-  MATHREPL   => 'displaymath',    # Environment introducing deleted maths blocks
-  MATHARRENV => undef,            # Environments turning on eqnarray math mode
-  MATHARRREPL => 'eqnarray*', # Environment introducing deleted maths blocks (note that now the starred varieties are being used, so this is only used to replace MATHMODE environments (where original environment is unknown)
-  ARRENV => undef, # Environments making arrays in math mode.  The underlining style does not cope well with those - as a result in-text math environments are surrounded by \mbox{ } if any of these commands is used in an inline math block
-  COUNTERCMD  => undef,    # COUNTERCMD textcmds which are associated with a counter
-                           # If any of these commands occur in a deleted block
-                           # they will be followed by an \addtocounter{...}{-1}
-                           # for the associated counter such that the overall numbers
-                           # should be the same as in the new file
-  LISTENV     => undef,    # list making environments - they will generally be kept
-  VERBATIMENV => undef,    # Environments whose content should be treated as verbatim text and not be touched
-  VERBATIMLINEENV => undef, # Environments whose content should be treated as verbatim text and processed in line diff mode
-  CUSTOMDIFCMD => undef, # Custom dif command. Is defined in the document as a \DELcommand and \ADDcommand version to be replaced by the diff
-  ITEMCMD => 'item'      # command marking item in a list environment
+  MINWORDSBLOCK    => 3,                # minimum number of tokens to form an independent block
+                                        # shorter identical blocks will be merged to the previous word
+  MAXCHANGESLETTER => 1,                # maximum number of changes in a letter for letter-level markup
+                                        # (rather than standard word level) to be used
+  SCALEDELGRAPHICS => 0.5,              # factor with which deleted figures will be scaled down (i.e. 0.5 implies they are shown at half linear size)
+                                        # this is only used for --dgraphics-markup=BOTH option
+  FLOATENV         => undef,            # Environments in which FL variants of defined commands are used
+  PICTUREENV       => undef,            # Environments in which all change markup is removed
+  MATHENV          => undef,            # Environments turning on display math mode (code also knows about \[ and \])
+  MATHREPL         => 'displaymath',    # Environment introducing deleted maths blocks
+  MATHARRENV       => undef,            # Environments turning on eqnarray math mode
+  MATHARRREPL      => 'eqnarray*',      # Environment introducing deleted maths blocks (note that now the starred varieties are being used, so this is only used to replace MATHMODE environments (where original environment is unknown)
+  ARRENV           => undef,            # Environments making arrays in math mode.  The underlining style does not cope well with those - as a result in-text math environments are surrounded by \mbox{ } if any of these commands is used in an inline math block
+  COUNTERCMD       => undef,            # COUNTERCMD textcmds which are associated with a counter
+                                        # If any of these commands occur in a deleted block
+                                        # they will be followed by an \addtocounter{...}{-1}
+                                        # for the associated counter such that the overall numbers
+                                        # should be the same as in the new file
+  LISTENV          => undef,            # list making environments - they will generally be kept
+  VERBATIMENV      => undef,            # Environments whose content should be treated as verbatim text and not be touched
+  VERBATIMLINEENV  => undef,            # Environments whose content should be treated as verbatim text and processed in line diff mode
+  CUSTOMDIFCMD     => undef,            # Custom dif command. Is defined in the document as a \DELcommand and \ADDcommand version to be replaced by the diff
+  ITEMCMD          => 'item'            # command marking item in a list environment
 );
 # Configuration variables: these have to be visible from the subroutines
 my (
-  $ARRENV,     $COUNTERCMD,       $FLOATENV,    $ITEMCMD,         $LISTENV,
-  $MATHARRENV, $MATHARRREPL,      $MATHENV,     $MATHREPL,        $MAXCHANGESLETTER, 
-  $MINWORDSBLOCK,
-  $PICTUREENV, $SCALEDELGRAPHICS, $VERBATIMENV, $VERBATIMLINEENV, $CUSTOMDIFCMD,
+  $ARRENV,           $COUNTERCMD,  $FLOATENV,        $ITEMCMD,          $LISTENV,       $MATHARRENV,
+  $MATHARRREPL,      $MATHENV,     $MATHREPL,        $MAXCHANGESLETTER, $MINWORDSBLOCK, $PICTUREENV,
+  $SCALEDELGRAPHICS, $VERBATIMENV, $VERBATIMLINEENV, $CUSTOMDIFCMD,
 );
 
 # my $MINWORDSBLOCK=3; # minimum number of tokens to form an independent block
@@ -365,12 +364,12 @@ my (
 # my $LISTENV='(?:itemize|description|enumerate)'; # list making environments - they will generally be kept
 # my $ITEMCMD='item';   # command marking item in a list environment
 
-my $LABELCMD = '(?:label)'; # matching commands are disabled within deleted blocks - mostly useful for maths mode, as otherwise it would be fine to just not add those to SAFECMDLIST
-my @UNSAFEMATHCMD = ( 'qedhere', 'intertext', 'begin', 'end' ); # Commands which are definitely unsafe for marking up in math mode (amsmath qedhere only tested to not work with UNDERLINE markup) (only affects WHOLE and COARSE math markup modes). Note that unlike text mode (or FINE math mode) deleted unsafe commands are not deleted but simply taken outside \DIFdel
+my $LABELCMD      = '(?:label)';                                   # matching commands are disabled within deleted blocks - mostly useful for maths mode, as otherwise it would be fine to just not add those to SAFECMDLIST
+my @UNSAFEMATHCMD = ( 'qedhere', 'intertext', 'begin', 'end' );    # Commands which are definitely unsafe for marking up in math mode (amsmath qedhere only tested to not work with UNDERLINE markup) (only affects WHOLE and COARSE math markup modes). Note that unlike text mode (or FINE math mode) deleted unsafe commands are not deleted but simply taken outside \DIFdel
 ###my $CITECMD=0 ;  # \cite-type commands which need to be protected within an mbox in UNDERLINE and other modes using ulem; pattern simply designed to never match; will be overwritten later for selected styles
 ###my $CITE2CMD=0;  # \cite-type commands which should be reinstated in deleted blocks
-my $MBOXINLINEMATH = 0; # if set to 1 then surround marked-up inline maths expression with \mbox ( to get around compatibility
-                        # problems between some maths packages and ulem package
+my $MBOXINLINEMATH = 0;                                            # if set to 1 then surround marked-up inline maths expression with \mbox ( to get around compatibility
+                                                                   # problems between some maths packages and ulem package
 
 ### use context2cmd list instead to define TITLECMD
 ###my $TITLECMD='(?:title|author|date|institute)'; # Preamble commands which contain text to be epressed by \maketitle command
@@ -396,39 +395,39 @@ my $AUXCMD       = '%DIFAUXCMD';       #  follows auxiliary commands put in by l
                                        # the same line as this would mean they are shown
                                        # so the special form "%DIFAUXCMD NEXT" is used to indicate that the next line
                                        # is an auxiliary command
-     # Similarly "%DIFAUXCMD LAST" would indicate the auxiliary command is in previous line (not currently used)
-my $DELCOMMENT  = 'DIF < ';     # To mark deleted comment line
-my $VERBCOMMENT = 'DIFVRB ';    # to mark lines which are within a verbatim environment
+                                       # Similarly "%DIFAUXCMD LAST" would indicate the auxiliary command is in previous line (not currently used)
+my $DELCOMMENT   = 'DIF < ';           # To mark deleted comment line
+my $VERBCOMMENT  = 'DIFVRB ';          # to mark lines which are within a verbatim environment
 
 # main local variables:
-my @TEXTCMDLIST     = (); # array containing patterns of commands with text arguments
-my @TEXTCMDEXCL     = (); # array containing patterns of commands without text arguments (if a pattern
-                          # matches both TEXTCMDLIST and TEXTCMDEXCL it is excluded)
-my @CONTEXT1CMDLIST = (); # array containing patterns of commands with text arguments (subset of text commands),
-                          # but which cause confusion if used out of context (e.g. \caption).
-                          # In deleted passages, the command will be disabled but its argument is marked up
-                          # Otherwise they behave exactly like TEXTCMD's
-my @CONTEXT1CMDEXCL = (); # exclude list for above, but always empty
-my @CONTEXT2CMDLIST = (); # array containing patterns of commands with text arguments, but which fail or cause confusion
-                          # if used out of context (e.g. \title). They and their arguments will be disabled in deleted
-                          # passages
-my @CONTEXT2CMDEXCL = (); # exclude list for above, but always empty
-my @MATHTEXTCMDLIST = (); # treat like textcmd.  If a textcmd is in deleted or added block, just wrap the
-                          # whole content with \DIFadd or \DIFdel irrespective of content.  This functionality
-                          # is useful for pseudo commands \MATHBLOCK.. into which math environments are being
-                          # transformed
-my @MATHTEXTCMDEXCL = (); #
+my @TEXTCMDLIST     = ();              # array containing patterns of commands with text arguments
+my @TEXTCMDEXCL     = ();              # array containing patterns of commands without text arguments (if a pattern
+                                       # matches both TEXTCMDLIST and TEXTCMDEXCL it is excluded)
+my @CONTEXT1CMDLIST = ();              # array containing patterns of commands with text arguments (subset of text commands),
+                                       # but which cause confusion if used out of context (e.g. \caption).
+                                       # In deleted passages, the command will be disabled but its argument is marked up
+                                       # Otherwise they behave exactly like TEXTCMD's
+my @CONTEXT1CMDEXCL = ();              # exclude list for above, but always empty
+my @CONTEXT2CMDLIST = ();              # array containing patterns of commands with text arguments, but which fail or cause confusion
+                                       # if used out of context (e.g. \title). They and their arguments will be disabled in deleted
+                                       # passages
+my @CONTEXT2CMDEXCL = ();              # exclude list for above, but always empty
+my @MATHTEXTCMDLIST = ();              # treat like textcmd.  If a textcmd is in deleted or added block, just wrap the
+                                       # whole content with \DIFadd or \DIFdel irrespective of content.  This functionality
+                                       # is useful for pseudo commands \MATHBLOCK.. into which math environments are being
+                                       # transformed
+my @MATHTEXTCMDEXCL = ();              #
 
 # Note I need to declare this with "our" instead of "my" because later in the code I have to "local"ise these
-our @SAFECMDLIST = (); # array containing patterns of safe commands (which do not break when in the argument of DIFadd or DIFDEL)
+our @SAFECMDLIST = ();                 # array containing patterns of safe commands (which do not break when in the argument of DIFadd or DIFDEL)
 our @SAFECMDEXCL = ();
-my @MBOXCMDLIST = ();    # patterns for commands which are in principle safe but which need to be surrounded by an \mbox
-my @MBOXCMDEXCL = ();    # all the patterns in MBOXCMDLIST will be appended to SAFECMDLIST
+my @MBOXCMDLIST = ();                  # patterns for commands which are in principle safe but which need to be surrounded by an \mbox
+my @MBOXCMDEXCL = ();                  # all the patterns in MBOXCMDLIST will be appended to SAFECMDLIST
 
-my @KEEPCMDLIST = (qr/^bibitem$/); # patterns for commands which should not be deleted in nominally deleted text passages
+my @KEEPCMDLIST = (qr/^bibitem$/);     # patterns for commands which should not be deleted in nominally deleted text passages
 my @KEEPCMDEXCL = ();
 
-my ( $i, $j, $l );
+my ( $i,    $j, $l );
 my ( $old,  $new );
 my ( $line, $key );
 my (@dumlist);
@@ -751,7 +750,7 @@ foreach $assign (@addtoconfig) {
 # Map from hash to variables (we do this to have more concise code later, change from comma-separated list)
 foreach ( keys(%CONFIG) ) {
   if    ( $_ eq "MINWORDSBLOCK" )    { $MINWORDSBLOCK    = $CONFIG{$_}; }
-  elsif ( $_ eq "MAXCHANGESLETTER" ) { $MAXCHANGESLETTER          = $CONFIG{$_}; }
+  elsif ( $_ eq "MAXCHANGESLETTER" ) { $MAXCHANGESLETTER = $CONFIG{$_}; }
   elsif ( $_ eq "FLOATENV" )         { $FLOATENV         = liststringtoregex( $CONFIG{$_} ); }
   elsif ( $_ eq "ITEMCMD" )          { $ITEMCMD          = $CONFIG{$_}; }
   elsif ( $_ eq "LISTENV" )          { $LISTENV          = liststringtoregex( $CONFIG{$_} ); }
@@ -870,7 +869,7 @@ my $abrat0 = '(?:[^<>])*';
 my $and        = '&';
 my $quotemarks = '(?:\'\')|(?:\`\`)';
 # some common abbreviations involving punctuations within them. They need special treatment because otherwise in some
-# circumstances the gnoring of white space differences in conjunction with merging according to MINWORDSBLOCK rule
+# circumstances the ignoring of white space differences in conjunction with merging according to MINWORDSBLOCK rule
 # could turn 'i.e.' into 'i.\PAR e.' (see https://github.com/ftilmann/latexdiff/issues/269)
 # English: i.e., e.g.   Deutsch: z.B.
 my $abbreviation = '(?:i\. ?e\.|e\. ?g\.|z\. ?B\.)';
@@ -890,10 +889,10 @@ my $cmdleftright = '\\\\(?:left|right|[Bb]igg?[lrm]?|middle)\s*(?:[<>()\[\]|\.]|
 # for selected commands, the number of arguments is known, and we can therefore allow spaces between command and its argument
 # Note that it is still expected that the arguments are blocks marked by parentheses rather than single characters, and that intervening comments will inhibit the association
 my $predefinedcmdoptseq12 = '\\\\(?:href|bibfield|bibinfo)\s*(?:\[' . $brat_n . '\])?\s*(?:\{' . $pat_n . '\}\s*){2}'; # Commands with one optional and two non-optional arguments
-my $predefinedcmdoptseq01 = '\\\\(?:url|BibitemShut)\s*\s*(?:\{' . $pat_n . '\}\s*){1}'; # Commands with one non-optional argument
-  # \bibitem in revtex styles appears to be always followed by \BibItemOpen. We bind \BibItemOpen to the bibitem (if present) in order to prevent the comparison algorithm to interpret the \BibItemOpen as an identical part of the sequence; this interpretation can lead to added and removed entries to the reference list to become mixed.
+my $predefinedcmdoptseq01 = '\\\\(?:url|BibitemShut)\s*\s*(?:\{' . $pat_n . '\}\s*){1}';                               # Commands with one non-optional argument
+                                                                                                                       # \bibitem in revtex styles appears to be always followed by \BibItemOpen. We bind \BibItemOpen to the bibitem (if present) in order to prevent the comparison algorithm to interpret the \BibItemOpen as an identical part of the sequence; this interpretation can lead to added and removed entries to the reference list to become mixed.
 my $predefinedbibitem =
-  '\\\\(?:bibitem)\s*(?:\[' . $brat_n . '\])?\s*(?:\{' . $pat_n . '\})(?:%?\s*\\\\BibitemOpen)?'; # Commands with one optional and one non-optional arguments
+  '\\\\(?:bibitem)\s*(?:\[' . $brat_n . '\])?\s*(?:\{' . $pat_n . '\})(?:%?\s*\\\\BibitemOpen)?';                      # Commands with one optional and one non-optional arguments
 my $predefinedcmdoptseq =
   '(?:' . $predefinedcmdoptseq12 . '|' . $predefinedcmdoptseq01 . '|' . $predefinedbibitem . ')';
 
@@ -962,7 +961,7 @@ if ( defined( $labels[1] ) ) {
 
 $encoding = guess_encoding($newfile) unless defined($encoding);
 
-$encoding = "utf8" if $encoding =~ m/^utf8/i;
+$encoding = "utf8"                  if $encoding =~ m/^utf8/i;
 print STDERR "Encoding $encoding\n" if $verbose;
 if ( lc($encoding) eq "utf8" ) {
   binmode( STDOUT, ":utf8" );
@@ -999,13 +998,13 @@ sub filter {
       $textout = $textout . $_;
     }
     if ($ignorefilterstderr) {
-      close CHLD_ERR;              # Enable only if Open3 used above
+      close CHLD_ERR;    # Enable only if Open3 used above
     }
     # On the off chance a very long running and/or frequently called script is used.
     waitpid( $pid, 0 );
     $text = $textout;
     print STDERR "Received " . length($text) . " chars after filtering\n" if $verbose;
-    print STDERR $text if $verbose;
+    print STDERR $text                                                    if $verbose;
   }
   return $text;
 }
@@ -1507,7 +1506,7 @@ print STDERR "(", exetime(), " s)\n", "Done.\n" if $verbose;
 # matching any of the elements
 sub liststringtoregex {
   my ($liststring) = @_;
-  my @elements = grep /\S/, split( ";", $liststring );
+  my @elements     = grep /\S/, split( ";", $liststring );
   if (@elements) {
     return ( '(?:(?:' . join( ')|(?:', @elements ) . '))' );
   } else {
@@ -1762,7 +1761,7 @@ sub flatten {
   );
   my ( $subpreamble, $subbody,    $subpost );
   my ( $subdir,      $subdirfull, $importfilepath );
-  my %verbhash ;  # shadows global %verbhash - here it is used only within flatten 
+  my %verbhash;    # shadows global %verbhash - here it is used only within flatten
   require File::Basename;
   ###  require File::Spec ;    # now this is needed even if flatten option not given
   $filename = File::Spec->rel2abs($filename);
@@ -1784,14 +1783,17 @@ sub flatten {
   $text = filter($text);
 
   #turn verbatim environments into hashes
-  $text =~  s/^((?:[^%\n]|\\%)*)\\begin\{($VERBATIMENV|$VERBATIMLINEENV)\}(.*?)\\end\{\2\}/"${1}\\DIF${2}{". tohash(\%verbhash,"${3}") . "}"/esgm;
-  
+  $text =~
+    s/^((?:[^%\n]|\\%)*)\\begin\{($VERBATIMENV|$VERBATIMLINEENV)\}(.*?)\\end\{\2\}/"${1}\\DIF${2}{". tohash(\%verbhash,"${3}") . "}"/esgm;
+
   #turn verbatim commands into hashes (but not if they are themselves in comments)
-  $text =~  s/^((?:[^%\n]|\\%)*)\\lstinline((?:\[$brat_n\])?)(\{(?:.*?)\})/"${1}\\DIFlstinline". $2 ."{". tohash(\%verbhash,"${3}") ."}"/esgm;
-  $text =~  s/^((?:[^%\n]|\\%)*)\\lstinline((?:\[$brat_n\])?)(([^\s\w]).*?\4)/"${1}\\DIFlstinline". $2 ."{". tohash(\%verbhash,"${3}") ."}"/esgm;
+  $text =~
+    s/^((?:[^%\n]|\\%)*)\\lstinline((?:\[$brat_n\])?)(\{(?:.*?)\})/"${1}\\DIFlstinline". $2 ."{". tohash(\%verbhash,"${3}") ."}"/esgm;
+  $text =~
+    s/^((?:[^%\n]|\\%)*)\\lstinline((?:\[$brat_n\])?)(([^\s\w]).*?\4)/"${1}\\DIFlstinline". $2 ."{". tohash(\%verbhash,"${3}") ."}"/esgm;
   ### $text =~  s/\\(verb\*?|lstinline)([^\s\w])(.*?)\2/"\\DIF${1}{". tohash(\%verbhash,"${2}${3}${2}") ."}"/esg;
-  $text =~  s/^((?:[^\n%]|\\%)*)\\(verb\*?|lstinline)([^\s\w])(.*?)\3/"${1}\\DIF${2}{". tohash(\%verbhash,"${3}${4}${3}") ."}"/esgm;
-  
+  $text =~
+    s/^((?:[^\n%]|\\%)*)\\(verb\*?|lstinline)([^\s\w])(.*?)\3/"${1}\\DIF${2}{". tohash(\%verbhash,"${3}${4}${3}") ."}"/esgm;
 
   # Recursively replace \\import, \\subimport, and related import commands
   $text =~ s/(^(?:[^%\n]|\\%)*)(\\(sub)?(?:import|inputfrom|includefrom))\{(.*?)\}(?:[\s]*)\{(.*?)\}/{
@@ -1925,11 +1927,12 @@ sub flatten {
      $replacement .= "\n" unless  $replacement =~ m(\n$)  ;
      "$begline\\begin{$verbenv}$verboptions\n$replacement\\end{$verbenv}\n";
     }/exgm;
- 
+
   # recover original text from hashed verbatim commands
   $text =~ s/\\DIF((?:verb\*?|lstinline(?:\[$brat_n\])?))\{([-\d]*?)\}/"\\${1}". fromhash(\%verbhash,${2})/esg;
   # recover original text from hashed verbatim environments
-  $text =~ s/\\DIF((?:$VERBATIMENV|$VERBATIMLINEENV)(?:\[$brat_n\])?)\{([-\d]*?)\}/"\\begin{${1}}".fromhash(\%verbhash,$2)."\\end{${1}}"/esg;
+  $text =~
+    s/\\DIF((?:$VERBATIMENV|$VERBATIMLINEENV)(?:\[$brat_n\])?)\{([-\d]*?)\}/"\\begin{${1}}".fromhash(\%verbhash,$2)."\\end{${1}}"/esg;
   ###print STDERR $text . "THE END";
   return ($text);
 }
@@ -1946,10 +1949,10 @@ sub print_regex_arr {
     $dumstring .= "$_ ";
   }
   $dumstring = join( " ", @_ );    # PERL generates string (?-xism:^ref$) for quoted refex ^ref$
-        #$dumstring =~ s/\(\?-xism:\^(.*?)\$\)/$1/g;   # remove string and ^,$ marks before output
-        #$dumstring =~ s/\(\^\?u:\^(.*?)\$\)/$1/g;   # remove string and ^,$ marks before output
-        #(?^u:^title$)
-        #$dumstring =~ s/\(\?\^u:\^(.*?)\$\)/$1/g;   # remove string and ^,$ marks before output
+                                   #$dumstring =~ s/\(\?-xism:\^(.*?)\$\)/$1/g;   # remove string and ^,$ marks before output
+                                   #$dumstring =~ s/\(\^\?u:\^(.*?)\$\)/$1/g;   # remove string and ^,$ marks before output
+                                   #(?^u:^title$)
+                                   #$dumstring =~ s/\(\?\^u:\^(.*?)\$\)/$1/g;   # remove string and ^,$ marks before output
   print $dumstring, "\n";
 }
 
@@ -2033,9 +2036,9 @@ sub extrapream {
 # NB this version avoids $` and $' for performance reason although it only makes a tiny difference
 # (in one test gain a tenth of a second for a 30s run)
 sub splitdoc {
-  my ( $text, $word1, $word2 ) = @_;
+  my ( $text,  $word1, $word2 ) = @_;
   my ( $part1, $part2, $part3 ) = ( "", "", "" );
-  my ( $rest, $pos );
+  my ( $rest,  $pos );
 
   if ( $text =~ m/(^[^%]*)($word1)/mg ) {
     $pos   = pos $text;
@@ -2237,7 +2240,7 @@ sub pass1 {
   my $i;
   my ( @delmid, @addmid, @dummy );
 
-  my ( $addcmds, $delcmds, $matchindex );
+  my ( $addcmds,       $delcmds, $matchindex );
   my ( $addtextblocks, $deltextblocks );
   my ( $addtokcnt,     $deltokcnt, $mattokcnt ) = ( 0, 0, 0 );
   my ( $addblkcnt,     $delblkcnt, $matblkcnt ) = ( 0, 0, 0 );
@@ -2425,7 +2428,7 @@ sub extracttextblocks {
       $token =~ /$wpat/
       || ( $token =~
         /^(?:\\protect)?\\((?:[`'^"~=.]|[\w\d@\*]+))((?:${extraspace}\[$brat_n\]${extraspace}|${extraspace}\{$pat_n\})*)/
-        && iscmd( $1, \@SAFECMDLIST, \@SAFECMDEXCL )
+        && iscmd( $1,  \@SAFECMDLIST, \@SAFECMDEXCL )
         && !iscmd( $1, \@TEXTCMDLIST, \@TEXTCMDEXCL ) )
       )
     {
@@ -2602,7 +2605,7 @@ sub tokenizeblocks {
         # regular behaviour
         $mode = 0;
         push( @accumulate, $token );
-        push( @new_seq, join( "", @accumulate ) );    # append the merged tokens so they appear as a single token
+        push( @new_seq,    join( "", @accumulate ) );    # append the merged tokens so they appear as a single token
       } else {
         print STDERR
           "WARNING: %END $blocktype directive without preceding BEGIN $blocktype. Maybe the preceding %BEGIN $blocktype was placed in a command argument and overlooked?\n";
@@ -2730,13 +2733,13 @@ sub marktags {
   my $word;
   my (@argtext);
   my $retval     = [];
-  my $noncomment = 0;     # flag to indicate whether we have already written a non-comment token
-  my $cmd        = -1;    # -1 at beginning 0: last token written is a ordinary word
-                          # 1: last token written is a command
-                          # for keeping track whether we are just in a command sequence or in a word sequence
-  my $cmdcomment = ( $opencmd =~ m/^%/ ); # Flag to indicate whether opencmd is a comment (i.e. if we intend to simply comment out changed commands). Usually this means we are in a deleted block
+  my $noncomment = 0;                                # flag to indicate whether we have already written a non-comment token
+  my $cmd        = -1;                               # -1 at beginning 0: last token written is a ordinary word
+                                                     # 1: last token written is a command
+                                                     # for keeping track whether we are just in a command sequence or in a word sequence
+  my $cmdcomment = ( $opencmd =~ m/^%/ );            # Flag to indicate whether opencmd is a comment (i.e. if we intend to simply comment out changed commands). Usually this means we are in a deleted block
   my ( $command, $commandword, $closingbracket );    # temporary variables needed below to remember sub-pattern matches
-  our $suppress_markup;    # we need to keep track across function calls, and also modifications outside
+  our $suppress_markup;                              # we need to keep track across function calls, and also modifications outside
 
   # split this block to split sequences joined in pass1, and %BEGIN|END DIFADD|DIFDEL blocks
   ### print STDERR "DEBUG: marktags before splitlatex blocksplit ",join("|",@$block),"\n" if $debug;
@@ -2824,8 +2827,8 @@ sub marktags {
           $word =~
           m/^((?:\\protect)?\\([\w\d\*]+)(?:${extraspace_mt}\[$brat_n\]|${extraspace_mt}\{$pat_n\})*${extraspace_mt}\{)($pat_n)(\}\s*)$/so
         )
-        && ( iscmd( $2, \@TEXTCMDLIST, \@TEXTCMDEXCL ) || iscmd( $2, \@MATHTEXTCMDLIST, \@MATHTEXTCMDEXCL ) )
-        && ( !$cmdcomment || !iscmd( $2, \@CONTEXT2CMDLIST, \@CONTEXT2CMDEXCL ) )
+        && ( iscmd( $2, \@TEXTCMDLIST, \@TEXTCMDEXCL ) || iscmd( $2,  \@MATHTEXTCMDLIST, \@MATHTEXTCMDEXCL ) )
+        && ( !$cmdcomment                              || !iscmd( $2, \@CONTEXT2CMDLIST, \@CONTEXT2CMDEXCL ) )
         )
       {
         # Condition 1: word is a command? - if yes, $1,$2,.. will be set as above
@@ -2891,13 +2894,13 @@ sub marktags {
         # 'keepcmd' in a deleted environment: keep  the command as is
         push( @$retval, $close ) if $cmd == 0;
         push( @$retval, $word );
-        $cmd = -1; # pretend we are at the beginning of a sequence because we do not want to add an additional $closecmd or $close before the next token, no matter what it is
+        $cmd = -1;    # pretend we are at the beginning of a sequence because we do not want to add an additional $closecmd or $close before the next token, no matter what it is
       } else {
         # ordinary command
 ###	print STDERR "DEBUG: Ordinary command $2 \n." if $debug;
-        push( @$retval, $opencmd ) if $cmd == -1;
+        push( @$retval, $opencmd )         if $cmd == -1;
         push( @$retval, $close, $opencmd ) if $cmd == 0;
-        $word =~ s/\n/\n${opencmd}/sg if $cmdcomment; # if opencmd is a comment, repeat this at the beginning of every line
+        $word =~ s/\n/\n${opencmd}/sg      if $cmdcomment;    # if opencmd is a comment, repeat this at the beginning of every line
         ### print STDERR "MARKTAGS: Add command |$word|\n";
         push( @$retval, $word );
         $cmd = 1;
@@ -3153,8 +3156,8 @@ sub reverselinecomment {
 # creates a hash value based on string and stores in %hash
 sub tohash {
   my ( $hash, $string ) = @_;
-  my ( @arr, $val );
-  my ( $sum, $i ) = ( 0, 1 );
+  my ( @arr,  $val );
+  my ( $sum,  $i ) = ( 0, 1 );
   my ($hstr);
 
   @arr = unpack( 'c*', $string );
@@ -3505,7 +3508,7 @@ sub postprocess {
         $delblock =~
           s/${DELCMDOPEN}(.*?)\\($CUSTOMDIFCMD)((?:\[${brat_n}\])*?(?:\s*\{${pat_n}\})*)/($1 ? "${DELCMDOPEN}$1${DELCMDCLOSE}":"") ."\\DEL$2". stripdelcmdopen($3)/egs;
         # if there is a sequence of several commands in the same row only the first will be converted due to the need to be connected to the DELCMDOPEN. To mop these up, just add the DEL to the front of any remaining cmd's in the deleted block
-        $delblock =~ s/\\($CUSTOMDIFCMD)/\\DEL$1/g; # this will also convert comments but I guess it does not matter much
+        $delblock =~ s/\\($CUSTOMDIFCMD)/\\DEL$1/g;    # this will also convert comments but I guess it does not matter much
       }
 
       #     splice in modified delblock
@@ -3550,13 +3553,13 @@ sub postprocess {
       $addblock =~ s/\\DIFverb/\\DIFDIFaddverb/g;
       $addblock =~ s/\\DIFlstinline/\\DIFDIFaddlstinline/g;
       if ($CUSTOMDIFCMD) {
-        $addblock =~ s/\\($CUSTOMDIFCMD)/\\ADD$1/g; # this will also convert comments but I guess it does not matter much
+        $addblock =~ s/\\($CUSTOMDIFCMD)/\\ADD$1/g;    # this will also convert comments but I guess it does not matter much
       }
       # markup the optional arguments of \item
       $addblock =~ s/(\\$ITEMCMD$extraspace(?:<$abrat0>)?$extraspace)\[($brat_n)\]/
 	@itemargs=splitlatex(substr($2,0,length($2)));
         $itemarg="[".join("",marktags("","",$ADDOPEN,$ADDCLOSE,"","",$ADDCOMMENT,\@itemargs))."]";
-      "$1$itemarg"/sge;                             # old substitution: $1\[$ADDOPEN$2$ADDCLOSE\]
+      "$1$itemarg"/sge;    # old substitution: $1\[$ADDOPEN$2$ADDCLOSE\]
       ###}
       #     splice in modified addblock
       substr( $_, $begin, $len ) = $addblock;
@@ -3703,25 +3706,31 @@ sub postprocess {
     # remove empty DIFCMD < lines
     s/^\Q${DELCMDOPEN}\E\n//msg;
 
-    # Look for paired \DIFdel{word} and \DIFadd{anotherword} commands and 
+    # Look for paired \DIFdel{word} and \DIFadd{anotherword} commands and
     # check if a letter level diff is preferable
 
     #while ( m/\\DIFdelbegin \\DIFdel\{(${word})\}\\DIFdelend \\DIFaddbegin \\DIFadd\{(${word})\}\\DIFaddend/g) {
-    while ( m/\\DIFdelbegin \\DIFdel\{($word\s*)\}\\DIFdelend \\DIFaddbegin \\DIFadd\{(${word}\s*)\}\\DIFaddend/g) {      
-      $len = length($&);
+    while (m/\\DIFdelbegin \\DIFdel\{($word\s*)\}\\DIFdelend \\DIFaddbegin \\DIFadd\{(${word}\s*)\}\\DIFaddend/g) {
+      $len   = length($&);
       $begin = pos($_) - $len;
-      my @oldletters = split( //, $1);
-      my @newletters = split( //, $2);
+      ###my @oldletters  = split( //, $1 );
+      ###my @newletters  = split( //, $2 );
+      my $word1 = $1;
+      my $word2 = $2;
+      my @oldletters  = ( $word1 =~ /($word_cj |[-\w\d*]|\\[\"\'\`~^][A-Za-z\*])/g );
+      my @newletters  = ( $word2 =~ /($word_cj |[-\w\d*]|\\[\"\'\`~^][A-Za-z\*])/g );
+      
+      ###print STDERR "DEBUG: Word detection. Found \\DIFdel{$word1}\\DIFadd{$word2} at ",pos,". Split into oldletters: |".join("|",@oldletters)."| and newletters: |".join("|",@newletters)."|\n" ;
       my @lettersdiff = pass2( \@oldletters, \@newletters );
       ###print STDERR "DEBUG: Word detection. Found \\DIFdel{$1}\\DIFadd{$2} at ",pos,". Replaced with ".join("",@lettersdiff) . "\n" ;
       ###print STDERR "Grep count: ", (scalar grep { $_ =~ /\\DIF(del|add)begin/} @lettersdiff),"\n";
-      if ( ( grep { $_ =~ /\\DIF(del|add)begin/} @lettersdiff ) <= $MAXCHANGESLETTER ) {
+      if ( ( grep { $_ =~ /\\DIF(del|add)begin/ } @lettersdiff ) <= $MAXCHANGESLETTER ) {
         # only make the change if there are at most 2 changes (up to 2 additions or deletions, or one substitution)
-        my $repl = join("",@lettersdiff);
+        my $repl = join( "", @lettersdiff );
         # if the string ends with spaces, then add '{}' after the last command to ensure there are not ignored
         $repl =~ s/(?<=\\DIF(?:add|del)end) (\s+)$/\{\}$1/sg;
         ###print STDERR "DEBUG: Replacing with |$repl|\n";
-        substr( $_, $begin, $len ) = $repl ;
+        substr( $_, $begin, $len ) = $repl;
         pos = $begin + length($repl);
       }
     }
@@ -5482,7 +5491,7 @@ I<latexdiff-fast> requires the I<diff> command to be present.
 
 =head1 AUTHOR
 
-Version 1.3.5a
+Version 1.4.0
 Copyright (C) 2004-2024 Frederik Tilmann
 
 This program is free software; you can redistribute it and/or modify
