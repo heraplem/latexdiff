@@ -3,7 +3,7 @@
 # latexdiff - differences two latex files on the word level
 #             and produces a latex file with the differences marked up.
 #
-#   Copyright (C) 2004-22  F J Tilmann (tilmann@gfz-potsdam.de)
+#   Copyright (C) 2004-25  F J Tilmann (tilmann@gfz-potsdam.de)
 #
 # Repository/issue tracker:   https://github.com/ftilmann/latexdiff
 # CTAN page:          http://www.ctan.org/pkg/latexdiff
@@ -33,6 +33,12 @@
 #
 # Note references to issue numbers are for the github repository of latexdiff: https://github.com/ftilmann/latexdiff
 #
+# Version 1.4.1: 
+# Bug fixes:
+# - For commands that were both in safecmd and textcmd lists, and which have optional arguments before the last textual argument, changes in those optional arguments would 
+#   lead to incomplete commands being marked up, leading to errors. The check for safe commands now is amended with a check for incomplete commands, whose token ends with {.
+#   Fixes #328 
+#
 # Version 1.4.0:
 #
 #  New features:
@@ -42,7 +48,7 @@
 #
 #  Bug fixes:
 #  - Fix a bug in pre-/postprocessing that led to odd behaviour if some characters with special meaning, like _,^ were used in particular contexts in verbatim environments. Fixes #305
-#  - Fix a bug in the preprocessing that detects \[ \] as math expression (it was interpreting \\] as \+ \] instead of correctly \\ + ]
+#  - Fix a bug in the preprocessing that detects \\[ \\] as math expression (it was interpreting \\] as \+ \] instead of correctly \\ + ]
 #  - Commands that were both in the safecmd and textcmd list, and which have additional arguments beyond the last textual one (optional or non-optional) could lead to errors, if there was a change in those earlier arguments  (fixes #306, first reported through debian bug report)
 #  - super- and subscripts without enclosing curly braces were assumed to be a simple expression, while in reality they could be commands with complicated (nested) arguments. These cases are not processed correctly. Fixes #279
 #  - in show-textcmd and show-safecmd some extra regex characters are now properly removed
@@ -59,7 +65,7 @@
 #  Modified behaviour:
 #  - Commands/RegExs explicitly defined as not safe with --exclude-safecmd are now also considered unsafe in COARSE and WHOLE math markup (Fixes #311)
 #  - --no-del now also removes deleted comments
-#  - --show-...  commands now have different behaviour dependent on whether old.tex and new.tex are specified. If they are not not then the initial setup is shown. If they are specified, then the full configuration is shown, which includes some additions of internal commands, and modifications based on what packages are present on the system, or are used in the .tex files. Either way, no differencing takes place.
+#  - --show-...  commands now have different behaviour dependent on whether old.tex and new.tex are specified. If they are not then the initial setup is shown. If they are specified, then the full configuration is shown, which includes some additions of internal commands, and modifications based on what packages are present on the system, or are used in the .tex files. Either way, no differencing takes place.
 #
 #
 #
@@ -307,8 +313,8 @@ use File::Spec;
 my ($algodiffversion) = split( / /, $Algorithm::Diff::VERSION );
 
 my ($versionstring) = <<EOF ;
-This is LATEXDIFF 1.4.0 (Algorithm::Diff $Algorithm::Diff::VERSION, Perl $^V)
-  (c) 2004-2024 F J Tilmann
+This is LATEXDIFF 1.4.1a (Algorithm::Diff $Algorithm::Diff::VERSION, Perl $^V)
+  (c) 2004-2026 F J Tilmann
 EOF
 
 # Hash with defaults for configuration variables. These marked undef have default values constructed from list defined in the DATA block
@@ -2808,11 +2814,13 @@ sub marktags {
     # also note that second pattern will match \\
 ###    print STDERR "DEBUG marktags: Considering word |$word|\n" if $debug;
     if ( $word =~ /^[&{}\[\]]/
-      || ( $word =~ /^(?:\\protect)?\\(?!\()(\\|[`'^"~=.]|[\w*@]+)/ && !iscmd( $1, \@SAFECMDLIST, \@SAFECMDEXCL ) ) )
+      || ( $word =~ /^(?:\\protect)?\\(?!\()(\\|[`'^"~=.]|[\w*@]+)/ 
+           && ( !iscmd( $1, \@SAFECMDLIST, \@SAFECMDEXCL ) || $word =~ /\{$/) ) )
     {
 ###      print STDERR "DEBUG MARKTAGS is a non-safe command\n" if $debug;
       ###    if ( $word =~ /^[&{}\[\]]/ || ( $word =~ /^\\([\w*@\\% ]+)/ && !iscmd($1,\@SAFECMDLIST,\@SAFECMDEXCL)) ) {
-      # word is a command or other significant token (not in SAFECMDLIST)
+      # word is a command or other significant token (not in SAFECMDLIST). Also, commands in SAFECMDLIST but which are 
+      #    incomplete, i.e end with '{' are treated as non-safe commands 
       ## same conditions as in subroutine extractcommand:
       # check if token is an alphanumeric command sequence with at least one non-optional argument
       # \cmd[...]{...}{last argument}
@@ -5491,8 +5499,8 @@ I<latexdiff-fast> requires the I<diff> command to be present.
 
 =head1 AUTHOR
 
-Version 1.4.0
-Copyright (C) 2004-2024 Frederik Tilmann
+Version 1.4.1a
+Copyright (C) 2004-2026 Frederik Tilmann
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License Version 3

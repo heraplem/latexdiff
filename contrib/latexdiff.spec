@@ -4,7 +4,7 @@ Version: 0.5
 Release: 1
 License: GPL
 Group: Productivity/Publishing/TeX/Utilities
-URL: http://www.tug.org/tex-archive/help/Catalogue/entries/latexdiff.html
+URL: https://ctan.org/pkg/latexdiff
 Source0: %{name}.zip
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root

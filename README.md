@@ -1,5 +1,6 @@
 latexdiff
 =========
+Release date:  2026-01-02    Releases: latexdiff 1.4.0  latexrevise 1.3.2  latexdiff-vc 1.3.4 
 
 Compares two latex files and marks up significant differences between them. Releases on https://ctan.org/pkg/latexdiff and mirrors.
 
